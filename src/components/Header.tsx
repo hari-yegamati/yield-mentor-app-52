@@ -8,12 +8,42 @@ const Header = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
 
-  const navItems = [
-    { path: '/', label: 'Home', icon: Sprout },
-    { path: '/crops', label: 'Crop Market', icon: ShoppingCart },
-    { path: '/products', label: 'Input Market', icon: TrendingUp },
-    { path: '/prediction', label: 'Crop Prediction', icon: Sprout },
-  ];
+  const getNavItems = () => {
+    const baseItems = [{ path: '/', label: 'Home', icon: Sprout }];
+    
+    if (!user) {
+      return [
+        ...baseItems,
+        { path: '/crops', label: 'Crop Market', icon: ShoppingCart },
+        { path: '/products', label: 'Input Market', icon: TrendingUp },
+        { path: '/prediction', label: 'Crop Prediction', icon: Sprout },
+      ];
+    }
+
+    switch (user.role) {
+      case 'farmer':
+        return [
+          ...baseItems,
+          { path: '/crops', label: 'Sell Crops', icon: ShoppingCart },
+          { path: '/products', label: 'Buy Inputs', icon: TrendingUp },
+          { path: '/prediction', label: 'Crop Prediction', icon: Sprout },
+        ];
+      case 'buyer':
+        return [
+          ...baseItems,
+          { path: '/crops', label: 'Buy Crops', icon: ShoppingCart },
+        ];
+      case 'seller':
+        return [
+          ...baseItems,
+          { path: '/products', label: 'Sell Products', icon: TrendingUp },
+        ];
+      default:
+        return baseItems;
+    }
+  };
+
+  const navItems = getNavItems();
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">

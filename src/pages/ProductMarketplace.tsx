@@ -19,6 +19,19 @@ const ProductMarketplace = () => {
   React.useEffect(() => {
     let filtered = mockProducts;
     
+    // Filter based on user role
+    if (user?.role === 'seller') {
+      // Sellers see only their own products for management
+      filtered = mockProducts.filter(product => product.seller === user.name);
+    } else if (user?.role === 'farmer') {
+      // Farmers see all available products to buy
+      filtered = mockProducts;
+    } else if (user?.role === 'buyer') {
+      // Buyers shouldn't access product marketplace
+      filtered = [];
+    }
+    
+    // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,12 +40,13 @@ const ProductMarketplace = () => {
       );
     }
     
+    // Apply category filter
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(product => product.category === categoryFilter);
     }
     
     setFilteredProducts(filtered);
-  }, [searchTerm, categoryFilter]);
+  }, [searchTerm, categoryFilter, user]);
 
   const handleOrder = (productName: string, seller: string) => {
     if (!user) {
@@ -44,11 +58,50 @@ const ProductMarketplace = () => {
       return;
     }
 
+    if (user.role !== 'farmer') {
+      toast({
+        title: "Access denied",
+        description: "Only farmers can purchase farming inputs.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Order Placed!",
       description: `Your order for ${productName} has been sent to ${seller}.`,
     });
   };
+
+  const handleAddProduct = () => {
+    toast({
+      title: "Add Product",
+      description: "Product listing feature will be implemented soon.",
+    });
+  };
+
+  const handleEditProduct = (productName: string) => {
+    toast({
+      title: "Edit Product",
+      description: `Edit feature for ${productName} will be implemented soon.`,
+    });
+  };
+
+  // Block access for buyers
+  if (user?.role === 'buyer') {
+    return (
+      <div className="min-h-screen bg-gradient-earth flex items-center justify-center">
+        <Card className="max-w-md mx-auto text-center">
+          <CardHeader>
+            <CardTitle>Access Restricted</CardTitle>
+            <CardDescription>
+              Input marketplace is for farmers and sellers only. As a buyer, you can access the Crop Marketplace.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -64,10 +117,22 @@ const ProductMarketplace = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Input Marketplace</h1>
+          <h1 className="text-4xl font-bold mb-4">
+            {user?.role === 'seller' ? 'Manage Your Products' : 'Input Marketplace'}
+          </h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Quality seeds, fertilizers, and farming supplies from trusted sellers
+            {user?.role === 'seller' 
+              ? 'List and manage your farming products inventory'
+              : 'Quality seeds, fertilizers, and farming supplies from trusted sellers'
+            }
           </p>
+          
+          {user?.role === 'seller' && (
+            <Button onClick={handleAddProduct} className="mb-6">
+              <Package className="w-4 h-4 mr-2" />
+              Add New Product
+            </Button>
+          )}
           
           {/* Search and Filter */}
           <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-4">
@@ -135,13 +200,24 @@ const ProductMarketplace = () => {
                       <IndianRupee className="w-6 h-6" />
                       {product.price}
                     </div>
-                    <Button 
-                      onClick={() => handleOrder(product.name, product.seller)}
-                      disabled={product.stock === 0}
-                      className="ml-4"
-                    >
-                      {product.stock === 0 ? 'Out of Stock' : 'Order Now'}
-                    </Button>
+                    {user?.role === 'farmer' ? (
+                      <Button 
+                        onClick={() => handleOrder(product.name, product.seller)}
+                        disabled={product.stock === 0}
+                        className="ml-4"
+                      >
+                        {product.stock === 0 ? 'Out of Stock' : 'Order Now'}
+                      </Button>
+                    ) : user?.role === 'seller' ? (
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleEditProduct(product.name)}
+                        className="ml-4"
+                      >
+                        <Package className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               </CardContent>
@@ -152,7 +228,10 @@ const ProductMarketplace = () => {
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">
-              No products found matching your criteria.
+              {user?.role === 'seller' 
+                ? "You haven't listed any products yet. Click 'Add New Product' to get started."
+                : "No products found matching your criteria."
+              }
             </p>
           </div>
         )}
@@ -161,9 +240,9 @@ const ProductMarketplace = () => {
           <div className="mt-12 text-center">
             <Card className="max-w-md mx-auto">
               <CardHeader>
-                <CardTitle>Ready to Shop?</CardTitle>
+                <CardTitle>Join the Marketplace</CardTitle>
                 <CardDescription>
-                  Sign up as a farmer to start buying quality supplies
+                  Sign up as a farmer to buy supplies or as a seller to offer quality farming products
                 </CardDescription>
               </CardHeader>
               <CardContent>

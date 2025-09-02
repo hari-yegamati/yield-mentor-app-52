@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockCrops } from '@/data/mockData';
-import { Search, MapPin, User, Package, IndianRupee } from 'lucide-react';
+import { Search, MapPin, User, Package, IndianRupee, Plus, Edit } from 'lucide-react';
 
 const CropMarketplace = () => {
   const { user } = useAuth();
@@ -15,13 +15,31 @@ const CropMarketplace = () => {
   const [filteredCrops, setFilteredCrops] = useState(mockCrops);
 
   React.useEffect(() => {
-    const filtered = mockCrops.filter(crop =>
-      crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      crop.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      crop.farmer.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = mockCrops;
+    
+    // Filter based on user role
+    if (user?.role === 'farmer') {
+      // Farmers see only their own crops for management
+      filtered = mockCrops.filter(crop => crop.farmer === user.name);
+    } else if (user?.role === 'buyer') {
+      // Buyers see all available crops
+      filtered = mockCrops;
+    } else if (user?.role === 'seller') {
+      // Sellers shouldn't access crop marketplace
+      filtered = [];
+    }
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(crop =>
+        crop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        crop.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        crop.farmer.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
     setFilteredCrops(filtered);
-  }, [searchTerm]);
+  }, [searchTerm, user]);
 
   const handleOrder = (cropName: string, farmerId: string) => {
     if (!user) {
@@ -33,21 +51,72 @@ const CropMarketplace = () => {
       return;
     }
 
+    if (user.role !== 'buyer') {
+      toast({
+        title: "Access denied",
+        description: "Only buyers can place orders for crops.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Order Placed!",
       description: `Your order for ${cropName} has been sent to ${farmerId}.`,
     });
   };
 
+  const handleAddCrop = () => {
+    toast({
+      title: "Add Crop",
+      description: "Crop listing feature will be implemented soon.",
+    });
+  };
+
+  const handleEditCrop = (cropName: string) => {
+    toast({
+      title: "Edit Crop",
+      description: `Edit feature for ${cropName} will be implemented soon.`,
+    });
+  };
+
+  // Block access for sellers
+  if (user?.role === 'seller') {
+    return (
+      <div className="min-h-screen bg-gradient-sky flex items-center justify-center">
+        <Card className="max-w-md mx-auto text-center">
+          <CardHeader>
+            <CardTitle>Access Restricted</CardTitle>
+            <CardDescription>
+              Crop marketplace is for farmers and buyers only. As a seller, you can access the Input Marketplace.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-sky">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Crop Marketplace</h1>
+          <h1 className="text-4xl font-bold mb-4">
+            {user?.role === 'farmer' ? 'Manage Your Crops' : 'Crop Marketplace'}
+          </h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Fresh crops directly from farmers to your doorstep
+            {user?.role === 'farmer' 
+              ? 'List and manage your crop inventory'
+              : 'Fresh crops directly from farmers to your doorstep'
+            }
           </p>
+          
+          {user?.role === 'farmer' && (
+            <Button onClick={handleAddCrop} className="mb-6">
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Crop
+            </Button>
+          )}
           
           {/* Search Bar */}
           <div className="max-w-md mx-auto relative">
@@ -102,12 +171,23 @@ const CropMarketplace = () => {
                       <IndianRupee className="w-6 h-6" />
                       {crop.price}/kg
                     </div>
-                    <Button 
-                      onClick={() => handleOrder(crop.name, crop.farmer)}
-                      className="ml-4"
-                    >
-                      Order Now
-                    </Button>
+                    {user?.role === 'buyer' ? (
+                      <Button 
+                        onClick={() => handleOrder(crop.name, crop.farmer)}
+                        className="ml-4"
+                      >
+                        Order Now
+                      </Button>
+                    ) : user?.role === 'farmer' ? (
+                      <Button 
+                        variant="outline"
+                        onClick={() => handleEditCrop(crop.name)}
+                        className="ml-4"
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               </CardContent>
@@ -118,7 +198,10 @@ const CropMarketplace = () => {
         {filteredCrops.length === 0 && (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">
-              No crops found matching your search.
+              {user?.role === 'farmer' 
+                ? "You haven't listed any crops yet. Click 'Add New Crop' to get started."
+                : "No crops found matching your search."
+              }
             </p>
           </div>
         )}
@@ -127,9 +210,9 @@ const CropMarketplace = () => {
           <div className="mt-12 text-center">
             <Card className="max-w-md mx-auto">
               <CardHeader>
-                <CardTitle>Ready to Buy?</CardTitle>
+                <CardTitle>Join the Marketplace</CardTitle>
                 <CardDescription>
-                  Sign up as a buyer to start ordering fresh crops
+                  Sign up as a farmer to sell crops or as a buyer to purchase fresh produce
                 </CardDescription>
               </CardHeader>
               <CardContent>
