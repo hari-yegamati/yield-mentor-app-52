@@ -3,16 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockCrops } from '@/data/mockData';
-import { Search, MapPin, User, Package, IndianRupee, Plus, Edit } from 'lucide-react';
+import { Crop } from '@/types';
+import { Search, MapPin, User, Package, IndianRupee, Plus, Edit, Truck } from 'lucide-react';
+import AddCropForm from '@/components/forms/AddCropForm';
+import ImageGallery from '@/components/ImageGallery';
 
 const CropMarketplace = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [filteredCrops, setFilteredCrops] = useState(mockCrops);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   React.useEffect(() => {
     let filtered = mockCrops;
@@ -37,9 +43,14 @@ const CropMarketplace = () => {
         crop.farmer.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(crop => crop.category === categoryFilter);
+    }
     
     setFilteredCrops(filtered);
-  }, [searchTerm, user]);
+  }, [searchTerm, categoryFilter, user]);
 
   const handleOrder = (cropName: string, farmerId: string) => {
     if (!user) {
@@ -67,10 +78,14 @@ const CropMarketplace = () => {
   };
 
   const handleAddCrop = () => {
-    toast({
-      title: "Add Crop",
-      description: "Crop listing feature will be implemented soon.",
-    });
+    setShowAddForm(true);
+  };
+
+  const handleCropAdded = (newCrop: Crop) => {
+    setShowAddForm(false);
+    // The crop is already added to mockCrops in the form component
+    // Trigger a re-filter to show the new crop
+    setFilteredCrops([...mockCrops]);
   };
 
   const handleEditCrop = (cropName: string) => {
@@ -114,92 +129,119 @@ const CropMarketplace = () => {
           {user?.role === 'farmer' && (
             <Button onClick={handleAddCrop} className="mb-6">
               <Plus className="w-4 h-4 mr-2" />
-              Add New Crop
+              List Your Crop
             </Button>
           )}
           
-          {/* Search Bar */}
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search crops, locations, or farmers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Search and Filter */}
+          <div className="max-w-2xl mx-auto flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search crops, locations, or farmers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="cereals">Cereals</SelectItem>
+                <SelectItem value="vegetables">Vegetables</SelectItem>
+                <SelectItem value="fruits">Fruits</SelectItem>
+                <SelectItem value="pulses">Pulses</SelectItem>
+                <SelectItem value="spices">Spices</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        {/* Crops Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCrops.map((crop) => (
-            <Card key={crop.id} className="group hover:shadow-natural transition-all duration-300">
-              <div className="aspect-video overflow-hidden rounded-t-lg">
-                <img
-                  src={crop.image}
-                  alt={crop.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-2xl">{crop.name}</CardTitle>
-                  <Badge variant="secondary" className="ml-2">
-                    Fresh
-                  </Badge>
+        {/* Crops Grid or Add Form */}
+        {showAddForm ? (
+          <AddCropForm 
+            onCropAdded={handleCropAdded}
+            onCancel={() => setShowAddForm(false)}
+          />
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCrops.map((crop) => (
+              <Card key={crop.id} className="group hover:shadow-natural transition-all duration-300">
+                <div className="aspect-video overflow-hidden rounded-t-lg">
+                  <ImageGallery images={crop.images} title={crop.name} />
                 </div>
-                <CardDescription className="text-base">
-                  {crop.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <User className="w-4 h-4 mr-2" />
-                    {crop.farmer}
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-2xl">{crop.name}</CardTitle>
+                    {crop.category && (
+                      <Badge className="bg-green-100 text-green-800">
+                        {crop.category}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {crop.location}
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Package className="w-4 h-4 mr-2" />
-                    {crop.quantity} kg available
-                  </div>
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="flex items-center text-2xl font-bold text-primary">
-                      <IndianRupee className="w-6 h-6" />
-                      {crop.price}/kg
+                  <CardDescription className="text-base">
+                    {crop.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <User className="w-4 h-4 mr-2" />
+                      {crop.farmer}
                     </div>
-                    {user?.role === 'buyer' ? (
-                      <Button 
-                        onClick={() => handleOrder(crop.name, crop.farmer)}
-                        className="ml-4"
-                      >
-                        Order Now
-                      </Button>
-                    ) : user?.role === 'farmer' ? (
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleEditCrop(crop.name)}
-                        className="ml-4"
-                      >
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                    ) : null}
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {crop.location}
+                    </div>
+                    {crop.harvestDate && (
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Package className="w-4 h-4 mr-2" />
+                        Harvested: {new Date(crop.harvestDate).toLocaleDateString()}
+                      </div>
+                    )}
+                    <div className="flex items-center text-sm text-accent">
+                      <Truck className="w-4 h-4 mr-2" />
+                      {crop.quantity} kg available
+                    </div>
+                    <div className="flex items-center justify-between pt-4">
+                      <div className="flex items-center text-2xl font-bold text-primary">
+                        <IndianRupee className="w-6 h-6" />
+                        {crop.price}/kg
+                      </div>
+                      {user?.role === 'buyer' ? (
+                        <Button 
+                          onClick={() => handleOrder(crop.name, crop.farmer)}
+                          disabled={crop.quantity === 0}
+                          className="ml-4"
+                        >
+                          {crop.quantity === 0 ? 'Sold Out' : 'Buy Now'}
+                        </Button>
+                      ) : user?.role === 'farmer' && user.name === crop.farmer ? (
+                        <Button 
+                          variant="outline"
+                          onClick={() => handleEditCrop(crop.name)}
+                          className="ml-4"
+                        >
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {filteredCrops.length === 0 && (
           <div className="text-center py-12">
             <p className="text-xl text-muted-foreground">
-              {user?.role === 'farmer' 
-                ? "You haven't listed any crops yet. Click 'Add New Crop' to get started."
+               {user?.role === 'farmer' 
+                ? "You haven't listed any crops yet. Click 'List Your Crop' to get started."
                 : "No crops found matching your search."
               }
             </p>

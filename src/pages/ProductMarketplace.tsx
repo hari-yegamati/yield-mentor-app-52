@@ -7,7 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { mockProducts } from '@/data/mockData';
-import { Search, Store, Package, IndianRupee, Truck } from 'lucide-react';
+import { Product } from '@/types';
+import { Search, Store, Package, IndianRupee, Truck, Plus } from 'lucide-react';
+import AddProductForm from '@/components/forms/AddProductForm';
+import ImageGallery from '@/components/ImageGallery';
 
 const ProductMarketplace = () => {
   const { user } = useAuth();
@@ -15,6 +18,7 @@ const ProductMarketplace = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [filteredProducts, setFilteredProducts] = useState(mockProducts);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   React.useEffect(() => {
     let filtered = mockProducts;
@@ -74,10 +78,14 @@ const ProductMarketplace = () => {
   };
 
   const handleAddProduct = () => {
-    toast({
-      title: "Add Product",
-      description: "Product listing feature will be implemented soon.",
-    });
+    setShowAddForm(true);
+  };
+
+  const handleProductAdded = (newProduct: Product) => {
+    setShowAddForm(false);
+    // The product is already added to mockProducts in the form component
+    // Trigger a re-filter to show the new product
+    setFilteredProducts([...mockProducts]);
   };
 
   const handleEditProduct = (productName: string) => {
@@ -129,7 +137,7 @@ const ProductMarketplace = () => {
           
           {user?.role === 'seller' && (
             <Button onClick={handleAddProduct} className="mb-6">
-              <Package className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               Add New Product
             </Button>
           )}
@@ -159,71 +167,86 @@ const ProductMarketplace = () => {
           </div>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <Card key={product.id} className="group hover:shadow-natural transition-all duration-300">
-              <div className="aspect-video overflow-hidden rounded-t-lg">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-2xl">{product.name}</CardTitle>
-                  <Badge className={getCategoryColor(product.category)}>
-                    {product.category}
-                  </Badge>
+        {/* Products Grid or Add Form */}
+        {showAddForm ? (
+          <AddProductForm 
+            onProductAdded={handleProductAdded}
+            onCancel={() => setShowAddForm(false)}
+          />
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="group hover:shadow-natural transition-all duration-300">
+                <div className="aspect-video overflow-hidden rounded-t-lg">
+                  <ImageGallery images={product.images} title={product.name} />
                 </div>
-                <CardDescription className="text-base">
-                  {product.description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Store className="w-4 h-4 mr-2" />
-                    {product.seller}
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-2xl">{product.name}</CardTitle>
+                    <Badge className={getCategoryColor(product.category)}>
+                      {product.category}
+                    </Badge>
                   </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Package className="w-4 h-4 mr-2" />
-                    {product.stock} units in stock
-                  </div>
-                  <div className="flex items-center text-sm text-accent">
-                    <Truck className="w-4 h-4 mr-2" />
-                    Free delivery available
-                  </div>
-                  <div className="flex items-center justify-between pt-4">
-                    <div className="flex items-center text-2xl font-bold text-primary">
-                      <IndianRupee className="w-6 h-6" />
-                      {product.price}
+                  <CardDescription className="text-base">
+                    {product.description}
+                  </CardDescription>
+                  {product.specifications && (
+                    <div className="mt-3 space-y-1">
+                      <p className="text-sm font-medium">Key Specifications:</p>
+                      <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                        {Object.entries(product.specifications).slice(0, 4).map(([key, value]) => (
+                          <div key={key}>
+                            <span className="font-medium">{key}:</span> {value}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    {user?.role === 'farmer' ? (
-                      <Button 
-                        onClick={() => handleOrder(product.name, product.seller)}
-                        disabled={product.stock === 0}
-                        className="ml-4"
-                      >
-                        {product.stock === 0 ? 'Out of Stock' : 'Order Now'}
-                      </Button>
-                    ) : user?.role === 'seller' ? (
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleEditProduct(product.name)}
-                        className="ml-4"
-                      >
-                        <Package className="w-4 h-4 mr-2" />
-                        Edit
-                      </Button>
-                    ) : null}
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Store className="w-4 h-4 mr-2" />
+                      {product.seller}
+                    </div>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Package className="w-4 h-4 mr-2" />
+                      {product.stock} units in stock
+                    </div>
+                    <div className="flex items-center text-sm text-accent">
+                      <Truck className="w-4 h-4 mr-2" />
+                      Free delivery available
+                    </div>
+                    <div className="flex items-center justify-between pt-4">
+                      <div className="flex items-center text-2xl font-bold text-primary">
+                        <IndianRupee className="w-6 h-6" />
+                        {product.price}
+                      </div>
+                      {user?.role === 'farmer' ? (
+                        <Button 
+                          onClick={() => handleOrder(product.name, product.seller)}
+                          disabled={product.stock === 0}
+                          className="ml-4"
+                        >
+                          {product.stock === 0 ? 'Out of Stock' : 'Order Now'}
+                        </Button>
+                      ) : user?.role === 'seller' ? (
+                        <Button 
+                          variant="outline"
+                          onClick={() => handleEditProduct(product.name)}
+                          className="ml-4"
+                        >
+                          <Package className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">

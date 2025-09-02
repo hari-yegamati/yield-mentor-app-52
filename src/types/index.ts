@@ -13,8 +13,10 @@ export interface Crop {
   quantity: number;
   price: number;
   location: string;
-  image: string;
+  images: string[];
   description: string;
+  harvestDate?: string;
+  category?: string;
 }
 
 export interface Product {
@@ -25,7 +27,8 @@ export interface Product {
   price: number;
   stock: number;
   description: string;
-  image: string;
+  images: string[];
+  specifications?: Record<string, string>;
 }
 
 export interface Order {

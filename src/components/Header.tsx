@@ -52,7 +52,7 @@ const Header = () => {
           <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
             <Sprout className="w-6 h-6 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-primary">SmartAgri</span>
+          <span className="text-xl font-bold text-primary">GeoCrop</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-1">

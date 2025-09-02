@@ -24,8 +24,10 @@ export const mockCrops: Crop[] = [
     quantity: 500,
     price: 25,
     location: 'Punjab',
-    image: maizeImg,
-    description: 'High-quality yellow maize, freshly harvested'
+    images: [maizeImg, wheatImg, riceImg],
+    description: 'High-quality yellow maize, freshly harvested',
+    harvestDate: '2024-08-15',
+    category: 'cereals'
   },
   {
     id: '2',
@@ -34,8 +36,10 @@ export const mockCrops: Crop[] = [
     quantity: 300,
     price: 30,
     location: 'Gujarat',
-    image: onionImg,
-    description: 'Premium red onions, perfect for cooking'
+    images: [onionImg, maizeImg, wheatImg],
+    description: 'Premium red onions, perfect for cooking',
+    harvestDate: '2024-08-20',
+    category: 'vegetables'
   },
   {
     id: '3',
@@ -44,8 +48,10 @@ export const mockCrops: Crop[] = [
     quantity: 800,
     price: 22,
     location: 'Punjab',
-    image: wheatImg,
-    description: 'Golden wheat grains, excellent quality'
+    images: [wheatImg, riceImg, maizeImg],
+    description: 'Golden wheat grains, excellent quality',
+    harvestDate: '2024-08-10',
+    category: 'cereals'
   },
   {
     id: '4',
@@ -54,8 +60,10 @@ export const mockCrops: Crop[] = [
     quantity: 600,
     price: 35,
     location: 'Gujarat',
-    image: riceImg,
-    description: 'Basmati rice, aromatic and premium'
+    images: [riceImg, wheatImg, onionImg],
+    description: 'Basmati rice, aromatic and premium',
+    harvestDate: '2024-08-25',
+    category: 'cereals'
   }
 ];
 
@@ -68,7 +76,13 @@ export const mockProducts: Product[] = [
     price: 150,
     stock: 100,
     description: 'High-yield hybrid rice seeds with disease resistance',
-    image: seedsImg
+    images: [seedsImg, fertilizerImg, riceImg],
+    specifications: {
+      'Variety': 'IR64',
+      'Yield': '8-10 tons/hectare',
+      'Maturity': '120-130 days',
+      'Resistance': 'Blast, BLB'
+    }
   },
   {
     id: '2',
@@ -78,7 +92,13 @@ export const mockProducts: Product[] = [
     price: 80,
     stock: 200,
     description: 'Eco-friendly organic fertilizer for better soil health',
-    image: fertilizerImg
+    images: [fertilizerImg, seedsImg, wheatImg],
+    specifications: {
+      'Type': 'Organic Compost',
+      'NPK': '4-3-2',
+      'Application': '200-300 kg/hectare',
+      'Coverage': '1 hectare per bag'
+    }
   },
   {
     id: '3',
@@ -88,7 +108,13 @@ export const mockProducts: Product[] = [
     price: 120,
     stock: 75,
     description: 'Premium corn seeds for high productivity',
-    image: seedsImg
+    images: [seedsImg, maizeImg, fertilizerImg],
+    specifications: {
+      'Variety': 'Pioneer 30Y87',
+      'Yield': '12-15 tons/hectare',
+      'Maturity': '110-115 days',
+      'Plant Height': '2.2-2.5 meters'
+    }
   },
   {
     id: '4',
@@ -98,7 +124,13 @@ export const mockProducts: Product[] = [
     price: 95,
     stock: 150,
     description: 'Balanced NPK fertilizer for all crops',
-    image: fertilizerImg
+    images: [fertilizerImg, seedsImg, riceImg],
+    specifications: {
+      'NPK Ratio': '20:20:20',
+      'Application': '150-200 kg/hectare',
+      'Solubility': 'Water soluble',
+      'Coverage': '2 hectares per bag'
+    }
   },
   {
     id: '5',
@@ -108,7 +140,13 @@ export const mockProducts: Product[] = [
     price: 60,
     stock: 80,
     description: 'Effective pesticide for crop protection',
-    image: fertilizerImg
+    images: [fertilizerImg, seedsImg, maizeImg],
+    specifications: {
+      'Active Ingredient': 'Chlorpyrifos 20%',
+      'Target Pests': 'Aphids, Thrips, Whitefly',
+      'Application Rate': '2-3 ml/liter',
+      'PHI': '15 days'
+    }
   }
 ];
 
